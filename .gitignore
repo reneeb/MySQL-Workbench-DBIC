@@ -1,0 +1,3 @@
+*.swp
+MySQL-Workbench-DBIC*
+.build*
