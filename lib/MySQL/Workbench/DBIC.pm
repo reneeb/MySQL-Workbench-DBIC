@@ -10,7 +10,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.14';
+our $VERSION = '0.01';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -334,7 +334,7 @@ __END__
         use_fake_dbic  => 1, # default 0
     );
 
-    $foo->create_schema( $xml_document );
+    $foo->create_schema;
 
 =head1 METHODS
 
@@ -344,17 +344,15 @@ creates a new object of MySQL::Workbench::DBIC. You can pass some parameters
 to new:
 
   my $foo = MySQL::Workbench::DBIC->new(
-    output_path    => '/path/to/dir',
-    input_file     => '/path/to/dbdesigner.file',
-    namespace      => 'MyApp::Database',
-    version_add    => 0.001,
-    schema_name    => 'MySchema',
-    column_details => 1,
-    use_fake_dbic  => 1, # default 0.
-    prefix         => {
-        belongs_to => 'fk_',
-        has_many   => 'has_',
-    },
+    output_path       => '/path/to/dir',
+    input_file        => '/path/to/dbdesigner.file',
+    namespace         => 'MyApp::Database',
+    version_add       => 0.001,
+    schema_name       => 'MySchema',
+    column_details    => 1,
+    use_fake_dbic     => 1, # default 0.
+    belongs_to_prefix => 'fk_',
+    has_many_prefix   => 'has_',
   );
 
 C<use_fake_dbic> is helpful when C<DBIx::Class> is not installed on the
@@ -384,8 +382,6 @@ sets / gets the name of the Workbench file
 =head2 column_details
 
 If enabled, the column definitions are more detailed. Default: disabled.
-
-  $foo->column_details( 1 );
 
 Standard (excerpt from Result classes):
 
