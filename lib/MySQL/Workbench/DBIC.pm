@@ -10,12 +10,12 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
 has namespace      => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
-has schema_name    => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9]+ \z }xms } );
+has schema_name    => ( is => 'rwp', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9_]+ \z }xms } );
 has version_add    => ( is => 'ro', required => 1, default => sub { 0.01 } );
 has column_details => ( is => 'ro', required => 1, default => sub { 0 } );
 has use_fake_dbic  => ( is => 'ro', required => 1, default => sub { 0 } );
@@ -26,7 +26,6 @@ has has_one_prefix      => ( is => 'ro', required => 1, default => sub { '' } );
 has many_to_many_prefix => ( is => 'ro', required => 1, default => sub { '' } );
 
 has version => ( is => 'rwp' );
-has schema  => ( is => 'rwp' );
 has classes => ( is => 'rwp', isa => sub { ref $_[0] && ref $_[0] eq 'ARRAY' }, default => sub { [] } );
 
 before new => sub {
@@ -116,7 +115,7 @@ sub _mkpath{
         my $dir = File::Spec->catdir( @parts[ 0..$i ] );
         $dir = $self->_untaint_path( $dir );
         unless ( -e $dir ) {
-            mkdir $dir or die $!;
+            mkdir $dir or die "$dir: $!";
         }
     }
 }
@@ -124,7 +123,7 @@ sub _mkpath{
 sub _has_many_template{
     my ($self, $to, $rels) = @_;
     
-    my $package = $self->namespace . '::' . $self->schema . '::Result::' . $to;
+    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $to;
        $package =~ s/^:://;
     my $name    = (split /::/, $package)[-1];
 
@@ -155,7 +154,7 @@ __PACKAGE__->has_many($temp_field => '$package',
 sub _belongs_to_template{
     my ($self, $from, $rels) = @_;
 
-    my $package = $self->namespace . '::' . $self->schema . '::Result::' . $from;
+    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $from;
        $package =~ s/^:://;
     my $name    = (split /::/, $package)[-1];
     
@@ -187,7 +186,7 @@ sub _class_template{
     my ($self,$table,$relations) = @_;
     
     my $name    = $table->name;
-    my $package = $self->namespace . '::' . $self->schema . '::Result::' . $name;
+    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $name;
        $package =~ s/^:://;
     
     my ($has_many, $belongs_to) = ('','');
@@ -271,7 +270,7 @@ sub _main_template{
     my @class_names  = @{ $self->classes };
     my $classes      = join "\n", map{ "    " . $_ }@class_names;
     
-    my $schema_name  = $self->schema;
+    my $schema_name  = $self->schema_name;
     my @schema_names = qw(DBIC_Schema Database DBIC MySchema MyDatabase DBIxClass_Schema);
     
     for my $schema ( @schema_names ){
@@ -284,7 +283,7 @@ sub _main_template{
 
     croak "couldn't determine a package name for the schema" unless $schema_name;
     
-    $self->_set_schema( $schema_name );
+    $self->_set_schema_name( $schema_name );
     
     my $namespace  = $self->namespace . '::' . $schema_name;
        $namespace  =~ s/^:://;

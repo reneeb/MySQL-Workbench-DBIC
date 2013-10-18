@@ -1,6 +1,11 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
-0.01 2013-09-27T17:31:12
+0.02 2013-10-19
+
+    better error message
+    fix handling of "schema_name"
+
+0.01 2013-09-27
 
     initial release
