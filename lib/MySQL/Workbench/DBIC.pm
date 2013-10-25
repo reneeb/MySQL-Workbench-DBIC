@@ -303,7 +303,7 @@ sub _main_template{
 
     my $version;
     eval {
-        eval "require $namespace";
+        eval "require $namespace"; ## no critic
         $version = $namespace->VERSION()
     };
 
