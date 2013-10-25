@@ -1,6 +1,13 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+0.03 2013-10-25
+
+    add column_info:
+    * is_numeric
+    * is_foreign_key
+    * retrieve_on_insert (only for primary key)
+
 0.02 2013-10-19
 
     better error message

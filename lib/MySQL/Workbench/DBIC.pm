@@ -5,12 +5,13 @@ use strict;
 
 use Carp;
 use File::Spec;
+use List::Util qw(first);
 use Moo;
 use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -190,6 +191,8 @@ sub _class_template{
        $package =~ s/^:://;
     
     my ($has_many, $belongs_to) = ('','');
+
+    my %foreign_keys;
     
     for my $to_table ( keys %{ $relations->{to} } ){
         $has_many .= $self->_has_many_template( $to_table, $relations->{to}->{$to_table} );
@@ -197,6 +200,9 @@ sub _class_template{
 
     for my $from_table ( keys %{ $relations->{from} } ){
         $belongs_to .= $self->_belongs_to_template( $from_table, $relations->{from}->{$from_table} );
+
+        my @foreign_key_names = map{ $_->{me} }@{ $relations->{from}->{$from_table} };
+        @foreign_keys{ @foreign_key_names } = (1) x @foreign_key_names;
     }
     
     my @columns = map{ $_->name }@{ $table->columns };
@@ -222,11 +228,18 @@ sub _class_template{
 
             my $name = $column->name;
 
-            push @options, "data_type => '" . $column->datatype . "',";
-            push @options, "is_auto_increment => 1,"                      if $column->autoincrement;
-            push @options, "is_nullable => 1,"                            if !$column->not_null;
-            push @options, "size => " . $size . ","                       if $size > 0;
-            push @options, "default_value => '" . $default_value . "',"   if $default_value;
+            push @options, "data_type          => '" . $column->datatype . "',";
+            push @options, "is_auto_increment  => 1,"                            if $column->autoincrement;
+            push @options, "is_nullable        => 1,"                            if !$column->not_null;
+            push @options, "size               => " . $size . ","                if $size > 0;
+            push @options, "default_value      => '" . $default_value . "',"     if $default_value;
+
+            if ( first { $column->datatype eq $_ }qw/SMALLINT INT INTEGER BIGINT MEDIUMINT NUMERIC DECIMAL/ ) {
+                push @options, "is_numeric         => 1,";
+            }
+
+            push @options, "retrieve_on_insert => 1," if first{ $name eq $_ }@{ $table->primary_key };
+            push @options, "is_foreign_key     => 1," if $foreign_keys{$name};
 
             my $option_string = join "\n        ", @options;
 

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
+use Test::More;
 use FindBin ();
 
 BEGIN {
@@ -40,13 +40,15 @@ ok -e $role_class;
 
 my $check = q~__PACKAGE__->add_columns(
     RoleID => {
-        data_type => 'INT',
-        is_auto_increment => 1,
+        data_type          => 'INT',
+        is_auto_increment  => 1,
+        is_numeric         => 1,
+        retrieve_on_insert => 1,
     },
     Rolename => {
-        data_type => 'VARCHAR',
-        is_nullable => 1,
-        size => 45,
+        data_type          => 'VARCHAR',
+        is_nullable        => 1,
+        size               => 45,
     },
 
 );~;
@@ -54,12 +56,40 @@ my $check = q~__PACKAGE__->add_columns(
 my $content = do{ local (@ARGV, $/) = $role_class; <> };
 like $content, qr/\Q$check\E/;
 
+#---
+
+my $user_role_class = $subpath . '/DBIC_Schema/Result/UserRole.pm';
+
+ok -e $user_role_class;
+
+my $user_role_check = q~__PACKAGE__->add_columns(
+    UserID => {
+        data_type          => 'INT',
+        is_numeric         => 1,
+        retrieve_on_insert => 1,
+        is_foreign_key     => 1,
+    },
+    RoleID => {
+        data_type          => 'INT',
+        is_numeric         => 1,
+        retrieve_on_insert => 1,
+        is_foreign_key     => 1,
+    },
+
+);~;
+
+my $user_role_content = do{ local (@ARGV, $/) = $user_role_class; <> };
+like $user_role_content, qr/\Q$user_role_check\E/;
+
+#---
 
 eval{
     rmtree( $output_path );
     $output_path = _untaint_path( $output_path );
     rmdir $output_path;
 };
+
+done_testing();
 
 sub rmtree{
     my ($path) = @_;
