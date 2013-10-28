@@ -1,6 +1,10 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+0.04 2013-10-29
+
+    * if no version is defined, but a version_add is given, the first version is the value of version_add
+
 0.03 2013-10-25
 
     add column_info:
