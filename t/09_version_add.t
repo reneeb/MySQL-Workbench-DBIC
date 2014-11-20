@@ -68,9 +68,9 @@ eval{
 is $version, 6, 'check version 6';
 
 eval{
-#    rmtree( $output_path );
-#    $output_path = _untaint_path( $output_path );
-#    rmdir $output_path;
+    rmtree( $output_path );
+    $output_path = _untaint_path( $output_path );
+    rmdir $output_path;
 };
 
 sub rmtree{
