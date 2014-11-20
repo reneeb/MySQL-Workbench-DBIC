@@ -1,6 +1,10 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+0.05 2014-11-20
+
+    * create classes with CamelCase names (when uppercase => 1 is set)
+
 0.04 2013-10-29
 
     * if no version is defined, but a version_add is given, the first version is the value of version_add
