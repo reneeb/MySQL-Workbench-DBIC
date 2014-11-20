@@ -371,6 +371,7 @@ to new:
     use_fake_dbic     => 1, # default 0.
     belongs_to_prefix => 'fk_',
     has_many_prefix   => 'has_',
+    uppercase         => 1,
   );
 
 C<use_fake_dbic> is helpful when C<DBIx::Class> is not installed on the
@@ -462,5 +463,8 @@ creates (col1 is the column name of the foreign key)
 
   __PACKAGE__->belongs_to( 'fk_col1' => 'OtherTable', {'foreign.col1' => 'self.col1' } );
 
+=head2 uppercase
 
+When C<uppercase> is set to true the package names are CamelCase. Given the table names I<user>, I<user_groups> and
+I<groups>, the package names would be I<*::User>, I<*::UserGroups> and I<*::Groups>.
 
