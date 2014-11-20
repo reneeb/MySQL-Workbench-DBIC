@@ -11,10 +11,11 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
+has uppercase      => ( is => 'ro' );
 has namespace      => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
 has schema_name    => ( is => 'rwp', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9_]+ \z }xms } );
 has version_add    => ( is => 'ro', required => 1, default => sub { 0.01 } );
@@ -187,7 +188,12 @@ sub _class_template{
     my ($self,$table,$relations) = @_;
     
     my $name    = $table->name;
-    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $name;
+    my $class   = $name;
+    if ( $self->uppercase ) {
+        $class = join '', map{ ucfirst $_ }split /[_-]/, $name;
+    }
+
+    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $class;
        $package =~ s/^:://;
     
     my ($has_many, $belongs_to) = ('','');
