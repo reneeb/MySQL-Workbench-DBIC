@@ -1,6 +1,10 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+0.06 2014-11-20
+
+    * fix CamelCase handling in relationships
+
 0.05 2014-11-20
 
     * create classes with CamelCase names (when uppercase => 1 is set)
