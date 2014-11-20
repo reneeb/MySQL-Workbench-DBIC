@@ -11,7 +11,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -311,6 +311,7 @@ sub _main_template{
     }
 
     croak "couldn't determine a package name for the schema" unless $schema_name;
+
     
     $self->_set_schema_name( $schema_name );
     
@@ -319,9 +320,14 @@ sub _main_template{
 
     my $version;
     eval {
-        eval "require $namespace"; ## no critic
-        $version = $namespace->VERSION()
-    };
+        my $lib_path = $self->_untaint_path( $self->output_path );
+        my @paths    = @INC;
+        unshift @INC, $lib_path;
+
+        eval "require $namespace";
+        $version = $namespace->VERSION();
+        1;
+    } or warn $@;
 
     if ( $version ) {
         $version += $self->version_add || 0.01;
