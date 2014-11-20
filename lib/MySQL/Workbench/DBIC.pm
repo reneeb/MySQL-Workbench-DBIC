@@ -11,7 +11,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -124,10 +124,15 @@ sub _mkpath{
 
 sub _has_many_template{
     my ($self, $to, $rels) = @_;
+
+    my $to_class = $to;
+    if ( $self->uppercase ) {
+        $to_class = join '', map{ ucfirst $_ }split /[_-]/, $to;
+    }
     
-    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $to;
+    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $to_class;
        $package =~ s/^:://;
-    my $name    = (split /::/, $package)[-1];
+    my $name    = $to;
 
     my %has_many_rels;
     my $counter = 1;
@@ -156,9 +161,14 @@ __PACKAGE__->has_many($temp_field => '$package',
 sub _belongs_to_template{
     my ($self, $from, $rels) = @_;
 
-    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $from;
+    my $from_class = $from;
+    if ( $self->uppercase ) {
+        $from_class = join '', map{ ucfirst $_ }split /[_-]/, $from;
+    }
+
+    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . $from_class;
        $package =~ s/^:://;
-    my $name    = (split /::/, $package)[-1];
+    my $name    = $from;
     
     my %belongs_to_rels;
     my $counter = 1;
