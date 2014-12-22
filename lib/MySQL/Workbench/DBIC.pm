@@ -61,10 +61,15 @@ sub create_schema{
     $self->_set_classes( \@classes );
     
     my @scheme = $self->_main_template;
-    
+
     my @files;
     for my $table ( @tables ){
-        push @files, $self->_class_template( $table, $relations{$table->name} );
+        my $name    = $table->name;
+        my %bridges = map{
+            $_ => $relations{$_}->{from},
+        }keys %{ $relations{$name}->{to} || {} };
+
+        push @files, $self->_class_template( $table, $relations{$name}, \%bridges );
     }
     
     push @files, @scheme;
@@ -120,6 +125,11 @@ sub _mkpath{
             mkdir $dir or die "$dir: $!";
         }
     }
+}
+
+sub _many_to_many_template {
+    my ($self, $to, $own, $foreign) = @_;
+
 }
 
 sub _has_many_template{
@@ -195,7 +205,12 @@ __PACKAGE__->belongs_to($temp_field => '$package',
 }
 
 sub _class_template{
-    my ($self,$table,$relations) = @_;
+    my ($self, $table, $relations, $bridges) = @_;
+
+use Data::Printer;
+p $table;
+p $relations;
+p $bridges;
     
     my $name    = $table->name;
     my $class   = $name;
