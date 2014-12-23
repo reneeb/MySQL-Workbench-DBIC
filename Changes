@@ -1,6 +1,9 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+  [IMPROVEMENTS]
+  * add sqlt_deploy_hook when indexes are defined
+
 0.07 2014-11-20
 
     * add output path to @INC
