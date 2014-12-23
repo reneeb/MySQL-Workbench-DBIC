@@ -11,7 +11,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -21,6 +21,7 @@ has schema_name    => ( is => 'rwp', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9_]+ \
 has version_add    => ( is => 'ro', required => 1, default => sub { 0.01 } );
 has column_details => ( is => 'ro', required => 1, default => sub { 0 } );
 has use_fake_dbic  => ( is => 'ro', required => 1, default => sub { 0 } );
+has skip_indexes   => ( is => 'ro', required => 1, default => sub { 0 } );
 
 has belongs_to_prefix   => ( is => 'ro', required => 1, default => sub { '' } );
 has has_many_prefix     => ( is => 'ro', required => 1, default => sub { '' } );
@@ -267,6 +268,9 @@ sub _class_template{
         }
     }
 
+    my @indexes      = @{ $table->indexes };
+    my $indexes_hook = $self->_indexes_template( @indexes );
+
     my $primary_key   = join " ", @{ $table->primary_key };
     my $version       = $self->version;
     
@@ -288,9 +292,48 @@ __PACKAGE__->set_primary_key( qw/ $primary_key / );
 $has_many
 $belongs_to
 
+$indexes_hook
+
 1;~;
 
     return $package, $template;
+}
+
+sub _indexes_template {
+    my ($self, @indexes) = @_;
+
+    return '' if !@indexes;
+    return '' if $self->skip_indexes;
+
+    my $hooks = '';
+
+    INDEX:
+    for my $index ( @indexes ) {
+        my $type = lc $index->type || 'normal';
+
+        next INDEX if $type eq 'primary';
+
+        $type = 'normal' if $type eq 'index';
+
+        $hooks .= sprintf '    $table->add_index(
+        type   => "%s",
+        name   => "%s",
+        fields => [%s],
+    );
+
+', $type, $index->name, join ', ', map{ "'$_'" }@{ $index->columns };
+    }
+
+    return '' if !$hooks;
+
+    my $sub_string = qq~
+sub sqlt_deploy_hook {
+    my (\$self, \$table) = \@_;
+
+$hooks}
+~;
+
+    return $sub_string;
 }
 
 sub _main_template{
@@ -483,4 +526,8 @@ creates (col1 is the column name of the foreign key)
 
 When C<uppercase> is set to true the package names are CamelCase. Given the table names I<user>, I<user_groups> and
 I<groups>, the package names would be I<*::User>, I<*::UserGroups> and I<*::Groups>.
+
+=head2 skip_indexes
+
+When C<skip_indexes> is true, the sub C<sqlt_deploy_hook> that adds the indexes to the table is not created
 
