@@ -5,6 +5,8 @@ Change history for MySQL::Workbench::DBIC
 
   [IMPROVEMENTS]
   * add a section where devs can put custom code and that is kept on class regeneration
+  * when a table comment is json, it is handled as extra info. That way, devs can define
+    additional components to load and extra column info (e.g. passphrase handling)
 
 0.08 2014-12-23
 
