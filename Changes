@@ -1,6 +1,11 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+1.00 2018-05-15 18:34:00
+
+  [IMPROVEMENTS]
+  * add a section where devs can put custom code and that is kept on class regeneration
+
 0.08 2014-12-23
 
   [IMPROVEMENTS]
