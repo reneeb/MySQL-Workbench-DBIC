@@ -65,12 +65,40 @@ sub create_schema{
     
     my @files;
     for my $table ( @tables ){
-        push @files, $self->_class_template( $table, $relations{$table->name} );
+        my $custom_code = $self->_custom_code( $table );
+        push @files, $self->_class_template( $table, $relations{$table->name}, $custom_code );
     }
     
     push @files, @scheme;
     
     $self->_write_files( @files );
+}
+
+sub _custom_code {
+    my ($self, $table) = @_;
+
+    my $path = File::Spec->catfile(
+        $self->output_path || (),
+        (split /::/, $self->namespace),
+        $self->schema_name, 'Result',
+        $table->name . '.pm'
+    );
+
+    return '' if !-f $path;
+
+    my $content = do { local (@ARGV, $/) = $path; <> };
+
+    my ($code) = $content =~ m{
+^[#] \s+ --- \s*
+^[#] \s+ Put \s+ your \s+ own \s+ code \s+ below \s+ this \s+ comment \s*
+^[#] \s+ --- \s*
+(.*?)
+^[#] \s+ --- \s*
+    }xms;
+
+    $code //= '';
+
+    return $code;
 }
 
 sub _write_files{
@@ -196,7 +224,7 @@ __PACKAGE__->belongs_to($temp_field => '$package',
 }
 
 sub _class_template{
-    my ($self,$table,$relations) = @_;
+    my ($self, $table, $relations, $custom_code) = @_;
     
     my $name    = $table->name;
     my $class   = $name;
@@ -293,6 +321,12 @@ $has_many
 $belongs_to
 
 $indexes_hook
+
+# ---
+# Put your own code below this comment
+# ---
+$custom_code
+# ---
 
 1;~;
 
@@ -531,3 +565,18 @@ I<groups>, the package names would be I<*::User>, I<*::UserGroups> and I<*::Grou
 
 When C<skip_indexes> is true, the sub C<sqlt_deploy_hook> that adds the indexes to the table is not created
 
+=head2 belongs_to_prefix
+
+=head2 has_many_prefix
+
+=head2 has_one_prefix
+
+=head2 many_to_many_prefix
+
+=head2 version
+
+=head2 use_fake_dbic
+
+=head2 classes
+
+=head2 file
