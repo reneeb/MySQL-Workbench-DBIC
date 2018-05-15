@@ -1,0 +1,224 @@
+[![Build Status](https://travis-ci.org/reneeb/MySQL-Workbench-DBIC.svg?branch=master)](https://travis-ci.org/reneeb/MySQL-Workbench-DBIC)
+[![Kwalitee status](http://cpants.cpanauthors.org/dist/MySQL-Workbench-DBIC.png)](http://cpants.charsbar.org/dist/overview/MySQL-Workbench-DBIC)
+[![GitHub issues](https://img.shields.io/github/issues/reneeb/MySQL-Workbench-DBIC.svg)](https://github.com/reneeb/MySQL-Workbench-DBIC/issues)
+
+# NAME
+
+MySQL::Workbench::DBIC - create DBIC scheme for MySQL workbench .mwb files
+
+# VERSION
+
+version 0.08
+
+# SYNOPSIS
+
+    use MySQL::Workbench::DBIC;
+
+    my $foo = MySQL::Workbench::DBIC->new(
+        file           => '/path/to/file.mwb',
+        output_path    => $some_path,
+        namespace      => 'MyApp::DB',
+        version_add    => 0.01,
+        column_details => 1, # default 1
+        use_fake_dbic  => 1, # default 0
+    );
+
+    $foo->create_schema;
+
+# METHODS
+
+## new
+
+creates a new object of MySQL::Workbench::DBIC. You can pass some parameters
+to new:
+
+    my $foo = MySQL::Workbench::DBIC->new(
+      output_path       => '/path/to/dir',
+      input_file        => '/path/to/dbdesigner.file',
+      namespace         => 'MyApp::Database',
+      version_add       => 0.001,
+      schema_name       => 'MySchema',
+      column_details    => 1,
+      use_fake_dbic     => 1, # default 0.
+      belongs_to_prefix => 'fk_',
+      has_many_prefix   => 'has_',
+      uppercase         => 1,
+    );
+
+`use_fake_dbic` is helpful when `DBIx::Class` is not installed on the
+machine where you use this module.
+
+## create\_schema
+
+creates all the files that are needed to work with DBIx::Class schema:
+
+The main module that loads all classes and one class per table. If you haven't
+specified an input file, the module will croak.
+
+# ATTRIBUTES
+
+## output\_path
+
+sets / gets the output path for the scheme
+
+    print $foo->output_path;
+
+## input\_file
+
+sets / gets the name of the Workbench file
+
+    print $foo->input_file;
+
+## column\_details
+
+If enabled, the column definitions are more detailed. Default: disabled.
+
+Standard (excerpt from Result classes):
+
+    __PACKAGE__->add_columns( qw/
+      cert_id
+      register_nr
+      state
+    );
+
+With enabled column details:
+
+    __PACKAGE__->add_columns(
+      cert_id => {
+        data_type         => 'integer',
+        is_nullable       => 0,
+        is_auto_increment => 1,
+      },
+      register_nr => {
+        data_type   => 'integer',
+        is_nullable => 0,
+      },
+      state => {
+        data_type     => 'varchar',
+        size          => 1,
+        is_nullable   => 0,
+        default_value => 'done',
+      },
+    );
+
+This is useful when you use [DBIx::Class::DeploymentHandler](https://metacpan.org/pod/DBIx::Class::DeploymentHandler) to deploy the columns
+correctly.
+
+## version\_add
+
+The files should be versioned (e.g. to deploy the DB via `DBIx::Class::DeploymentHandler`). On the first run 
+the version is set to "0.01". When the schema file already exists, the version is increased by the value
+of `version_add` (default: 0.01)
+
+## schema\_name 
+
+sets a new name for the schema. By default on of these names is used:
+
+    DBIC_Scheme Database DBIC MyScheme MyDatabase DBIxClass_Scheme
+
+## namespace
+
+sets / gets the name of the namespace. If you set the namespace to 'Test' and you
+have a table named 'MyTable', the main module is named 'Test::DBIC\_Scheme' and
+the class for 'MyTable' is named 'Test::DBIC\_Scheme::MyTable'
+
+## prefix
+
+In relationships the accessor for the objects of the "other" table shouldn't have the name of the column. 
+Otherwise it is very clumsy to get the orginial value of this table.
+
+    'belongs_to' => 'fk_'
+    'has_many' => 'has_'
+
+creates (col1 is the column name of the foreign key)
+
+    __PACKAGE__->belongs_to( 'fk_col1' => 'OtherTable', {'foreign.col1' => 'self.col1' } );
+
+## uppercase
+
+When `uppercase` is set to true the package names are CamelCase. Given the table names _user_, _user\_groups_ and
+_groups_, the package names would be _\*::User_, _\*::UserGroups_ and _\*::Groups_.
+
+## skip\_indexes
+
+When `skip_indexes` is true, the sub `sqlt_deploy_hook` that adds the indexes to the table is not created
+
+## belongs\_to\_prefix
+
+## has\_many\_prefix
+
+## has\_one\_prefix
+
+## many\_to\_many\_prefix
+
+## version
+
+## use\_fake\_dbic
+
+## classes
+
+## file
+
+## table\_comments
+
+When this flag is used, `MySQL::Workbench::DBIC` assumes that (some) tables
+have stored extra information for columns in the table comments. This must
+be in JSON format.
+
+
+
+## Development
+
+The distribution is contained in a Git repository, so simply clone the
+repository
+
+```
+$ git clone git://github.com/reneeb/MySQL-Workbench-DBIC.git
+```
+
+and change into the newly-created directory.
+
+```
+$ cd MySQL-Workbench-DBIC
+```
+
+The project uses [`Dist::Zilla`](https://metacpan.org/pod/Dist::Zilla) to
+build the distribution, hence this will need to be installed before
+continuing:
+
+```
+$ cpanm Dist::Zilla
+```
+
+To install the required prequisite packages, run the following set of
+commands:
+
+```
+$ dzil authordeps --missing | cpanm
+$ dzil listdeps --author --missing | cpanm
+```
+
+The distribution can be tested like so:
+
+```
+$ dzil test
+```
+
+To run the full set of tests (including author and release-process tests),
+add the `--author` and `--release` options:
+
+```
+$ dzil test --author --release
+```
+
+# AUTHOR
+
+Renee Baecker &lt;reneeb@cpan.org>
+
+# COPYRIGHT AND LICENSE
+
+This software is Copyright (c) 2018 by Renee Baecker.
+
+This is free software, licensed under:
+
+    The Artistic License 2.0 (GPL Compatible)
