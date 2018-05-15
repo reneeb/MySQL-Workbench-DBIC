@@ -4,7 +4,9 @@ use warnings;
 use strict;
 
 use Carp;
+use Data::Dumper;
 use File::Spec;
+use JSON;
 use List::Util qw(first);
 use Moo;
 use MySQL::Workbench::Parser;
@@ -22,6 +24,7 @@ has version_add    => ( is => 'ro', required => 1, default => sub { 0.01 } );
 has column_details => ( is => 'ro', required => 1, default => sub { 0 } );
 has use_fake_dbic  => ( is => 'ro', required => 1, default => sub { 0 } );
 has skip_indexes   => ( is => 'ro', required => 1, default => sub { 0 } );
+has table_comments => ( is => 'ro', required => 1, default => sub { 0 } );
 
 has belongs_to_prefix   => ( is => 'ro', required => 1, default => sub { '' } );
 has has_many_prefix     => ( is => 'ro', required => 1, default => sub { '' } );
@@ -237,6 +240,17 @@ sub _class_template{
     
     my ($has_many, $belongs_to) = ('','');
 
+    my $comment = $table->comment // '{}';
+
+    my $data;
+    eval {
+        $data = JSON->new->utf8(1)->decode( $comment );
+    };
+
+    my $components = ( $data && $data->{components} ) ?
+        join( ' ', '', @{ $data->{components} } ) :
+        '';
+
     my %foreign_keys;
     
     for my $to_table ( keys %{ $relations->{to} } ){
@@ -286,6 +300,19 @@ sub _class_template{
             push @options, "retrieve_on_insert => 1," if first{ $name eq $_ }@{ $table->primary_key };
             push @options, "is_foreign_key     => 1," if $foreign_keys{$name};
 
+            if ( $data && $data->{column_info}->{$name} ) {
+                local $Data::Dumper::Sortkeys = 1;
+                local $Data::Dumper::Indent   = 1;
+                local $Data::Dumper::Pad      = '      ';
+
+                my $dump = Dumper( $data->{column_info}->{$name} );
+                $dump    =~ s{\$VAR1 \s+ = \s* \{ \s*? $}{}xms;
+                $dump    =~ s{\A\s+\n\s{8}}{}xms;
+                $dump    =~ s{\n[ ]+\};\s*\z}{}xms;
+
+                push @options, $dump;
+            }
+
             my $option_string = join "\n        ", @options;
 
             $column_string .= <<"            COLUMN";
@@ -310,7 +337,7 @@ use base qw(DBIx::Class);
 
 our \$VERSION = $version;
 
-__PACKAGE__->load_components( qw/PK::Auto Core/ );
+__PACKAGE__->load_components( qw/PK::Auto Core$components/ );
 __PACKAGE__->table( '$name' );
 __PACKAGE__->add_columns(
 $column_string
@@ -580,3 +607,9 @@ When C<skip_indexes> is true, the sub C<sqlt_deploy_hook> that adds the indexes 
 =head2 classes
 
 =head2 file
+
+=head2 table_comments
+
+When this flag is used, C<MySQL::Workbench::DBIC> assumes that (some) tables
+have stored extra information for columns in the table comments. This must
+be in JSON format.
