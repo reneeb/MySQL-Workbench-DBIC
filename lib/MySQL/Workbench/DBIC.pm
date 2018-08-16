@@ -92,11 +92,11 @@ sub _custom_code {
     my $content = do { local (@ARGV, $/) = $path; <> };
 
     my ($code) = $content =~ m{
-^[#] \s+ --- \s*
-^[#] \s+ Put \s+ your \s+ own \s+ code \s+ below \s+ this \s+ comment \s*
-^[#] \s+ --- \s*
-(.*?)
-^[#] \s+ --- \s*
+        ^[#] \s+ --- \s*
+        ^[#] \s+ Put \s+ your \s+ own \s+ code \s+ below \s+ this \s+ comment \s*
+        ^[#] \s+ --- \s*
+        (.*?)
+        ^[#] \s+ --- \s*
     }xms;
 
     $code //= '';
