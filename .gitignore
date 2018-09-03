@@ -1,4 +1,5 @@
 *.swp
 MySQL-Workbench-DBIC*
 .build*
+t/Test*
 t/*.bak
