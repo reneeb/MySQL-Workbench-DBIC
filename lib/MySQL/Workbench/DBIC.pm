@@ -13,7 +13,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -401,7 +401,9 @@ sub _indexes_template {
 sub sqlt_deploy_hook {
     my (\$self, \$table) = \@_;
 
-$hooks}
+$hooks
+    return 1;
+}
 ~;
 
     return $sub_string;

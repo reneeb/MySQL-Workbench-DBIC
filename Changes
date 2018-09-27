@@ -1,6 +1,10 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+1.02 2018-09-27 10:24:00
+
+  * Add a return statement to the generated sqlt_deploy_hook method
+
 1.01 2018-09-02 08:23:00
 
   [IMPROVEMENTS]
