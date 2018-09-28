@@ -13,7 +13,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 has output_path    => ( is => 'ro', required => 1, default => sub { '.' } );
 has file           => ( is => 'ro', required => 1 );
@@ -454,6 +454,9 @@ sub _main_template{
     $self->_set_version( $version );
        
     my $template = qq~package $namespace;
+
+use strict;
+use warnings;
 
 use base qw/DBIx::Class::Schema/;
 
