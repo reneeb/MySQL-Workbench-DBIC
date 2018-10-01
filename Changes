@@ -1,6 +1,10 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+1.04 2018-10-01 09:58:00
+
+  * Try to fix CPAN testers failures
+
 1.03 2018-09-28 13:57:00
 
   * Add strict and warnings to Schema.pm
