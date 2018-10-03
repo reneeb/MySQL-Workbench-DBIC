@@ -35,11 +35,11 @@ $foo->create_schema;
 my $subpath = $output_path . '/' . $path;
 ok( -e $subpath , 'Path ' . $subpath . ' created' );
 ok( -e $subpath . '/DBIC_Schema.pm', 'Schema' );
-ok( -e $subpath . '/DBIC_Schema/Result/Core/Gefa_User.pm', 'Gefa_User' );
-ok( -e $subpath . '/DBIC_Schema/Result/Core/UserRole.pm', 'UserRole' );
-ok( -e $subpath . '/DBIC_Schema/Result/Core/Role.pm', 'Role' );
+ok( -e $subpath . '/DBIC_Schema/Core/Result/Gefa_User.pm', 'Gefa_User' );
+ok( -e $subpath . '/DBIC_Schema/Core/Result/UserRole.pm', 'UserRole' );
+ok( -e $subpath . '/DBIC_Schema/Core/Result/Role.pm', 'Role' );
 
-my $content = do{ local (@ARGV, $/) = $subpath . '/DBIC_Schema/Result/Core/UserRole.pm'; <> };
+my $content = do{ local (@ARGV, $/) = $subpath . '/DBIC_Schema/Core/Result/UserRole.pm'; <> };
 like_string $content, qr/sqlt_deploy_hook/;
 
 like_string $content,
