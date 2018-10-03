@@ -84,8 +84,9 @@ sub _custom_code {
     my $path = File::Spec->catfile(
         $self->output_path || (),
         (split /::/, $self->namespace),
-        $self->schema_name, 'Result',
+        $self->schema_name,
         $self->result_namespace,
+        'Result',
         $table->name . '.pm'
     );
 
@@ -164,7 +165,7 @@ sub _has_many_template{
         $to_class = join '', map{ ucfirst $_ }split /[_-]/, $to;
     }
 
-    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . (length $self->result_namespace ? $self->result_namespace . '::' : '') . $to_class;
+    my $package = $self->namespace . '::' . $self->schema_name . (length $self->result_namespace ? '::' . $self->result_namespace : '') . '::Result::' . $to_class;
        $package =~ s/^:://;
     my $name    = $to;
 
@@ -200,7 +201,7 @@ sub _belongs_to_template{
         $from_class = join '', map{ ucfirst $_ }split /[_-]/, $from;
     }
 
-    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . (length $self->result_namespace ? $self->result_namespace . '::' : '') . $from_class;
+    my $package = $self->namespace . '::' . $self->schema_name . (length $self->result_namespace ? '::' . $self->result_namespace : '') . '::Result::' . $from_class;
        $package =~ s/^:://;
     my $name    = $from;
 
@@ -237,7 +238,7 @@ sub _class_template{
         $class = join '', map{ ucfirst $_ }split /[_-]/, $name;
     }
 
-    my $package = $self->namespace . '::' . $self->schema_name . '::Result::' . (length $self->result_namespace ? $self->result_namespace . '::' : '') . $class;
+    my $package = $self->namespace . '::' . $self->schema_name . (length $self->result_namespace ? '::' . $self->result_namespace : '') . '::Result::' . $class;
        $package =~ s/^:://;
 
     my ($has_many, $belongs_to) = ('','');
@@ -592,7 +593,7 @@ the class for 'MyTable' is named 'Test::DBIC_Scheme::Result::MyTable'
 =head2 result_namespace
 
 sets / gets the name of an optional result namespace. If you set the result_namespace to 'Core' and you
-have a table named 'MyTable', the class for 'MyTable' is named 'Test::DBIC_Scheme::Result::Core::MyTable'
+have a table named 'MyTable', the class for 'MyTable' is named 'Test::DBIC_Scheme::Core::Result::MyTable'
 
 =head2 prefix
 
