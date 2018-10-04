@@ -165,9 +165,15 @@ sub _has_many_template{
         $to_class = join '', map{ ucfirst $_ }split /[_-]/, $to;
     }
 
-    my $package = $self->namespace . '::' . $self->schema_name . (length $self->result_namespace ? '::' . $self->result_namespace : '') . '::Result::' . $to_class;
-       $package =~ s/^:://;
-    my $name    = $to;
+    my $package = join '::', (
+       ( $self->namespace ? $self->namespace : () ),
+       $self->schema_name,
+       ( length $self->result_namespace ? $self->result_namespace : () ),
+       'Result',
+       $to_class,
+    );
+
+    my $name = $to;
 
     my %has_many_rels;
     my $counter = 1;
