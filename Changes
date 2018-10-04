@@ -1,7 +1,7 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
-1.07 2018-10-04 13:52:00
+1.07 2018-10-04 14:09:00
 
   * Add option to inherit from DBIx::Class::Core instead of DBIx::Class
 
