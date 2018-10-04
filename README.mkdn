@@ -8,7 +8,7 @@ MySQL::Workbench::DBIC - create DBIC scheme for MySQL workbench .mwb files
 
 # VERSION
 
-version 1.04
+version 1.05
 
 # SYNOPSIS
 
@@ -36,6 +36,7 @@ to new:
       output_path       => '/path/to/dir',
       input_file        => '/path/to/dbdesigner.file',
       namespace         => 'MyApp::Database',
+      result_namespace  => 'Core',
       version_add       => 0.001,
       schema_name       => 'MySchema',
       column_details    => 1,
@@ -106,11 +107,11 @@ correctly.
 
 ## version\_add
 
-The files should be versioned (e.g. to deploy the DB via `DBIx::Class::DeploymentHandler`). On the first run 
+The files should be versioned (e.g. to deploy the DB via `DBIx::Class::DeploymentHandler`). On the first run
 the version is set to "0.01". When the schema file already exists, the version is increased by the value
 of `version_add` (default: 0.01)
 
-## schema\_name 
+## schema\_name
 
 sets a new name for the schema. By default on of these names is used:
 
@@ -120,11 +121,16 @@ sets a new name for the schema. By default on of these names is used:
 
 sets / gets the name of the namespace. If you set the namespace to 'Test' and you
 have a table named 'MyTable', the main module is named 'Test::DBIC\_Scheme' and
-the class for 'MyTable' is named 'Test::DBIC\_Scheme::MyTable'
+the class for 'MyTable' is named 'Test::DBIC\_Scheme::Result::MyTable'
+
+## result\_namespace
+
+sets / gets the name of an optional result namespace. If you set the result\_namespace to 'Core' and you
+have a table named 'MyTable', the class for 'MyTable' is named 'Test::DBIC\_Scheme::Core::Result::MyTable'
 
 ## prefix
 
-In relationships the accessor for the objects of the "other" table shouldn't have the name of the column. 
+In relationships the accessor for the objects of the "other" table shouldn't have the name of the column.
 Otherwise it is very clumsy to get the orginial value of this table.
 
     'belongs_to' => 'fk_'
