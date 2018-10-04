@@ -49,6 +49,9 @@ like_string $content,
         fields \s* => \s* \['RoleID'\]
     /xms;
 
+my $schema_content = do{ local (@ARGV, $/) = $subpath . '/DBIC_Schema.pm'; <> };
+like_string $schema_content, qr/result_namespace => 'Core',/, 'load_namespace set';
+
 done_testing();
 
 sub rmtree{

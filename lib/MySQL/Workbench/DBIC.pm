@@ -15,18 +15,18 @@ use MySQL::Workbench::Parser;
 
 our $VERSION = '1.05';
 
-has output_path      => ( is => 'ro', required => 1, default => sub { '.' } );
-has file             => ( is => 'ro', required => 1 );
-has uppercase        => ( is => 'ro' );
-has namespace        => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
-has result_namespace => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
-has schema_name      => ( is => 'rwp', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9_]+ \z }xms } );
-has version_add      => ( is => 'ro', required => 1, default => sub { 0.01 } );
-has column_details   => ( is => 'ro', required => 1, default => sub { 0 } );
-has use_fake_dbic    => ( is => 'ro', required => 1, default => sub { 0 } );
-has skip_indexes     => ( is => 'ro', required => 1, default => sub { 0 } );
-has table_comments   => ( is => 'ro', required => 1, default => sub { 0 } );
-
+has output_path         => ( is => 'ro', required => 1, default => sub { '.' } );
+has file                => ( is => 'ro', required => 1 );
+has uppercase           => ( is => 'ro' );
+has namespace           => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
+has result_namespace    => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
+has resultset_namespace => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
+has schema_name         => ( is => 'rwp', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9_]+ \z }xms } );
+has version_add         => ( is => 'ro', required => 1, default => sub { 0.01 } );
+has column_details      => ( is => 'ro', required => 1, default => sub { 0 } );
+has use_fake_dbic       => ( is => 'ro', required => 1, default => sub { 0 } );
+has skip_indexes        => ( is => 'ro', required => 1, default => sub { 0 } );
+has table_comments      => ( is => 'ro', required => 1, default => sub { 0 } );
 has belongs_to_prefix   => ( is => 'ro', required => 1, default => sub { '' } );
 has has_many_prefix     => ( is => 'ro', required => 1, default => sub { '' } );
 has has_one_prefix      => ( is => 'ro', required => 1, default => sub { '' } );
@@ -207,9 +207,15 @@ sub _belongs_to_template{
         $from_class = join '', map{ ucfirst $_ }split /[_-]/, $from;
     }
 
-    my $package = $self->namespace . '::' . $self->schema_name . (length $self->result_namespace ? '::' . $self->result_namespace : '') . '::Result::' . $from_class;
-       $package =~ s/^:://;
-    my $name    = $from;
+    my $package = join '::', (
+       ( $self->namespace ? $self->namespace : () ),
+       $self->schema_name,
+       ( length $self->result_namespace ? $self->result_namespace : () ),
+       'Result',
+       $from_class,
+    );
+
+    my $name = $from;
 
     my %belongs_to_rels;
     my $counter = 1;
@@ -244,8 +250,13 @@ sub _class_template{
         $class = join '', map{ ucfirst $_ }split /[_-]/, $name;
     }
 
-    my $package = $self->namespace . '::' . $self->schema_name . (length $self->result_namespace ? '::' . $self->result_namespace : '') . '::Result::' . $class;
-       $package =~ s/^:://;
+    my $package = join '::', (
+       ( $self->namespace ? $self->namespace : () ),
+       $self->schema_name,
+       ( length $self->result_namespace ? $self->result_namespace : () ),
+       'Result',
+       $class,
+    );
 
     my ($has_many, $belongs_to) = ('','');
 
@@ -456,6 +467,14 @@ sub _main_template{
         1;
     } or warn $@;
 
+    my %all_namespaces_to_load;
+    if ( $self->resultset_namespace ) {
+        $all_namespaces_to_load{resultset_namespace} = $self->resultset_namespace;
+    }
+    if ( $self->result_namespace ) {
+        $all_namespaces_to_load{result_namespace} = $self->result_namespace;
+    }
+
     if ( $version ) {
         $version += $self->version_add || 0.01;
     }
@@ -463,6 +482,15 @@ sub _main_template{
     $version ||= ($self->version_add || 0.01);
 
     $self->_set_version( $version );
+
+    my $namespaces_to_load = '';
+    if ( %all_namespaces_to_load ) {
+        $namespaces_to_load = "(" .
+            ( join '', map{
+                "\n    " . $_ . " => '" . $all_namespaces_to_load{$_} . "',"
+            }sort keys %all_namespaces_to_load ) .
+            "\n)";
+    }
 
     my $template = qq~package $namespace;
 
@@ -473,7 +501,7 @@ use base qw/DBIx::Class::Schema/;
 
 our \$VERSION = $version;
 
-__PACKAGE__->load_namespaces;
+__PACKAGE__->load_namespaces$namespaces_to_load;
 
 1;~;
 
@@ -602,6 +630,11 @@ the class for 'MyTable' is named 'Test::DBIC_Scheme::Result::MyTable'
 
 sets / gets the name of an optional result namespace. If you set the result_namespace to 'Core' and you
 have a table named 'MyTable', the class for 'MyTable' is named 'Test::DBIC_Scheme::Core::Result::MyTable'
+
+=head2 resultset_namespace
+
+sets / gets the name of an optional resultset namespace. If you set the resultset_namespace to 'Core' and you
+have a table named 'MyTable', the resultset class for 'MyTable' is named 'Test::DBIC_Scheme::Core::ResultSet::MyTable'
 
 =head2 prefix
 
