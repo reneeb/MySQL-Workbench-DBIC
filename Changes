@@ -1,6 +1,10 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+1.07 2018-10-04 13:52:00
+
+  * Add option to inherit from DBIx::Class::Core instead of DBIx::Class
+
 1.06 2018-10-04 09:24:00
 
   * Fix test failures for perl <= 5.16 (#3, reported by eserte / Slaven Rezić)

@@ -176,6 +176,12 @@ When this flag is used, `MySQL::Workbench::DBIC` assumes that (some) tables
 have stored extra information for columns in the table comments. This must
 be in JSON format.
 
+## inherit\_from\_core
+
+By default, the classes inherit from `DBIx::Class` and they load the components
+`PK::Auto` and `Core`. If you set _inherit\_from\_core_, the classes inherit
+from `DBIx::Class::Core`. and no extra components are loaded.
+
 
 
 ## Development

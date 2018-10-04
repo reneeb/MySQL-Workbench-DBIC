@@ -18,6 +18,7 @@ our $VERSION = '1.06';
 has output_path         => ( is => 'ro', required => 1, default => sub { '.' } );
 has file                => ( is => 'ro', required => 1 );
 has uppercase           => ( is => 'ro' );
+has inherit_from_core   => ( is => 'ro' );
 has namespace           => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
 has result_namespace    => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
 has resultset_namespace => ( is => 'ro', isa => sub { $_[0] =~ m{ \A [A-Z]\w*(::\w+)* \z }xms }, required => 1, default => sub { '' } );
@@ -267,9 +268,11 @@ sub _class_template{
         $data = JSON->new->utf8(1)->decode( $comment );
     };
 
-    my $components = ( $data && $data->{components} ) ?
-        join( ' ', '', @{ $data->{components} } ) :
-        '';
+    $data //= {};
+
+    my @core_components = $self->inherit_from_core ? () : qw(PK::Auto Core);
+    my $components      = join( ' ', @core_components, @{ $data->{components} || [] } ) // '';
+    my $load_components = $components ? "__PACKAGE__->load_components( qw/$components/ );" : '';
 
     my %foreign_keys;
 
@@ -358,16 +361,17 @@ sub _class_template{
 
     my $primary_key   = join " ", @{ $table->primary_key };
     my $version       = $self->version;
+    my $inherit_from  = $self->inherit_from_core ? '::Core' : '';
 
     my $template = qq~package $package;
 
 use strict;
 use warnings;
-use base qw(DBIx::Class);
+use base qw(DBIx::Class$inherit_from);
 
 our \$VERSION = $version;
 
-__PACKAGE__->load_components( qw/PK::Auto Core$components/ );
+$load_components
 __PACKAGE__->table( '$name' );
 __PACKAGE__->add_columns(
 $column_string
@@ -678,3 +682,10 @@ When C<skip_indexes> is true, the sub C<sqlt_deploy_hook> that adds the indexes 
 When this flag is used, C<MySQL::Workbench::DBIC> assumes that (some) tables
 have stored extra information for columns in the table comments. This must
 be in JSON format.
+
+=head2 inherit_from_core
+
+By default, the classes inherit from C<DBIx::Class> and they load the components
+C<PK::Auto> and C<Core>. If you set I<inherit_from_core>, the classes inherit
+from C<DBIx::Class::Core>. and no extra components are loaded.
+
