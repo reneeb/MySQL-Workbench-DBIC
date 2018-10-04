@@ -419,13 +419,15 @@ sub _main_template{
     my $classes      = join "\n", map{ "    " . $_ }@class_names;
 
     my $schema_name  = $self->schema_name;
-    my @schema_names = qw(DBIC_Schema Database DBIC MySchema MyDatabase DBIxClass_Schema);
 
-    for my $schema ( @schema_names ){
-        last if $schema_name;
-        unless( grep{ $_ eq $schema }@class_names ){
-            $schema_name = $schema;
-            last;
+    unless ($schema_name) {
+        my @schema_names = qw(DBIC_Schema Database DBIC MySchema MyDatabase DBIxClass_Schema);
+
+        for my $schema ( @schema_names ){
+            unless( grep{ $_ eq $schema }@class_names ){
+                $schema_name = $schema;
+                last;
+            }
         }
     }
 
