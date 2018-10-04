@@ -6,6 +6,8 @@ Change history for MySQL::Workbench::DBIC
   * Fix test failures for perl <= 5.16 (#3, reported by eserte / Slaven Rezić)
   * Slightly improved logic in method _main_template (#4, thanks to manwar / Mohammad S Anwar).
   * to avoid reordering of relationships from version to version use always a sorted list of relationships
+  * added result_namespace to "load_namespaces" when result_namespace is set
+  * added resultset_namespace option
 
 1.05 2018-10-04 07:33:00
 
