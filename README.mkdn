@@ -8,7 +8,7 @@ MySQL::Workbench::DBIC - create DBIC scheme for MySQL workbench .mwb files
 
 # VERSION
 
-version 1.05
+version 1.06
 
 # SYNOPSIS
 
@@ -127,6 +127,11 @@ the class for 'MyTable' is named 'Test::DBIC\_Scheme::Result::MyTable'
 
 sets / gets the name of an optional result namespace. If you set the result\_namespace to 'Core' and you
 have a table named 'MyTable', the class for 'MyTable' is named 'Test::DBIC\_Scheme::Core::Result::MyTable'
+
+## resultset\_namespace
+
+sets / gets the name of an optional resultset namespace. If you set the resultset\_namespace to 'Core' and you
+have a table named 'MyTable', the resultset class for 'MyTable' is named 'Test::DBIC\_Scheme::Core::ResultSet::MyTable'
 
 ## prefix
 
