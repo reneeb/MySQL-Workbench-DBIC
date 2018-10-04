@@ -256,11 +256,11 @@ sub _class_template{
 
     my %foreign_keys;
 
-    for my $to_table ( keys %{ $relations->{to} } ){
+    for my $to_table ( sort keys %{ $relations->{to} } ){
         $has_many .= $self->_has_many_template( $to_table, $relations->{to}->{$to_table} );
     }
 
-    for my $from_table ( keys %{ $relations->{from} } ){
+    for my $from_table ( sort keys %{ $relations->{from} } ){
         $belongs_to .= $self->_belongs_to_template( $from_table, $relations->{from}->{$from_table} );
 
         my @foreign_key_names = map{ $_->{me} }@{ $relations->{from}->{$from_table} };
