@@ -1,7 +1,13 @@
 package MySQL::Workbench::DBIC::FakeDBIC;
 
+use strict;
+use warnings;
+
 package
   DBIx::Class::Schema;
+
+use strict;
+use warnings;
 
 # ABSTRACT: provide some DBIx::Class method stubs when DBIx::Class is not installed 
 
@@ -9,6 +15,9 @@ sub DBIx::Class::Schema::load_namespaces {}
 
 package
    DBIx::Class;
+
+use strict;
+use warnings;
 
 sub DBIx::Class::load_components {}
 sub DBIx::Class::table {}
