@@ -8,7 +8,7 @@ MySQL::Workbench::DBIC - create DBIC scheme for MySQL workbench .mwb files
 
 # VERSION
 
-version 1.07
+version 1.08
 
 # SYNOPSIS
 
@@ -184,7 +184,7 @@ from `DBIx::Class::Core`. and no extra components are loaded.
 
 
 
-## Development
+# Development
 
 The distribution is contained in a Git repository, so simply clone the
 repository
@@ -230,7 +230,7 @@ $ dzil test --author --release
 
 # AUTHOR
 
-Renee Baecker &lt;reneeb@cpan.org>
+Renee Baecker <reneeb@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
