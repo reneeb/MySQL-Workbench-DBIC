@@ -170,12 +170,6 @@ When `skip_indexes` is true, the sub `sqlt_deploy_hook` that adds the indexes to
 
 ## file
 
-## table\_comments
-
-When this flag is used, `MySQL::Workbench::DBIC` assumes that (some) tables
-have stored extra information for columns in the table comments. This must
-be in JSON format.
-
 ## inherit\_from\_core
 
 By default, the classes inherit from `DBIx::Class` and they load the components

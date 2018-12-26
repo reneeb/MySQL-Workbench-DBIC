@@ -24,11 +24,7 @@ sub DBIx::Class::Schema::load_namespaces {}
 
 =head2 DBIx::Class::Schema
 
-=over 4
-
-=item * load_namespaces
-
-=back
+=head3 load_namespaces
 
 =cut
 
@@ -49,7 +45,7 @@ sub DBIx::Class::has_many {}
 
 =over 4
 
-=item * load_components
+=item * DBIx::Class::load_components
 
 =item * DBIx::Class::table
 
