@@ -1,4 +1,4 @@
-*.swp
+*.sw*
 MySQL-Workbench-DBIC*
 .build*
 t/Test*
