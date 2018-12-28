@@ -54,6 +54,7 @@ my $content = do{ local (@ARGV, $/) = $role_class; <> };
 like $content, qr/\Q$check\E/;
 
 my $schema_content = do { local (@ARGV, $/) = $subpath . '/DBIC_Schema.pm'; <> };
+like $schema_content, qr/VERSION = 0.02/;
 like $schema_content, qr/\Q$check\E/;
 
 eval{

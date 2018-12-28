@@ -584,15 +584,17 @@ sub _main_template{
                 $self->load_resultset_namespace;
     }
 
-    if ( $self->result_namespace ) {
-        push @{ $all_namespaces_to_load{result_namespace} }, sprintf "'%s'", $self->result_namespace;
-    }
-
     if ( $self->load_result_namespace ) {
         push @{ $all_namespaces_to_load{result_namespace} }, map { "'$_'" }
             ref $self->load_result_namespace ?
                 @{ $self->load_result_namespace } :
                 $self->load_result_namespace;
+    }
+
+    if ( $self->result_namespace ) {
+        my $namespace = sprintf "'%s::Result'", $self->result_namespace;
+        my $found     = grep { $namespace eq $_ }@{ $all_namespaces_to_load{result_namespace} };
+        unshift @{ $all_namespaces_to_load{result_namespace} }, $namespace if !$found;
     }
 
     if ( $version ) {
