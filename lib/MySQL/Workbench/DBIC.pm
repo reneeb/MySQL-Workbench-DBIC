@@ -100,7 +100,7 @@ sub create_schema{
 
     my @files;
     for my $table ( @tables ){
-        my $custom_code = $self->_custom_code( $table );
+        my $custom_code = $self->_custom_code_table( $table );
         push @files, $self->_class_template( $table, $relations{$table->name}, $custom_code );
     }
 
@@ -109,7 +109,7 @@ sub create_schema{
     $self->_write_files( @files );
 }
 
-sub _custom_code {
+sub _custom_code_table {
     my ($self, $table) = @_;
 
     my $name = $table->name;
@@ -130,6 +130,12 @@ sub _custom_code {
     );
 
     return '' if !-f $path;
+
+    return $self->_custom_code( $path );
+}
+
+sub _custom_code {
+    my ($self, $path) = @_;
 
     my $content = do { local (@ARGV, $/) = $path; <> };
 
@@ -557,6 +563,15 @@ sub _main_template{
         1;
     } or warn $@;
 
+    my $custom_code;
+    if ( $version ) {
+        (my $path       = $namespace) =~ s{::}{/}g;
+        my $schema_file = $self->output_path . '/' . $path . '.pm';
+        $custom_code    = $self->_custom_code( $schema_file );
+    }
+
+    $custom_code //= '';
+
     my %all_namespaces_to_load;
     if ( $self->resultset_namespace ) {
         push @{ $all_namespaces_to_load{resultset_namespace} }, sprintf "'%s'", $self->resultset_namespace;
@@ -614,6 +629,12 @@ use base qw/DBIx::Class::Schema/;
 our \$VERSION = $version;
 
 __PACKAGE__->load_namespaces$namespaces_to_load;
+
+# ---
+# Put your own code below this comment
+# ---
+$custom_code
+# ---
 
 1;~;
 
