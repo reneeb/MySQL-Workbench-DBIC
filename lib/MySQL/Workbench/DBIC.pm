@@ -369,6 +369,12 @@ sub _class_template{
             push @options, "retrieve_on_insert => 1," if first{ $name eq $_ }@{ $table->primary_key };
             push @options, "is_foreign_key     => 1," if $foreign_keys{$name};
 
+            my %flags = %{ $column->flags };
+            if ( %flags ) {
+                my $extras = join ', ', map { "$_ => 1" }sort keys %flags;
+                push @options, sprintf "extra => {%s},", $extras;
+            }
+
             my $column_comment_perl_raw = '';
 
             if ( ( $data && $data->{column_info}->{$name} ) || $col_comment ) {
@@ -478,11 +484,20 @@ sub _indexes_template {
     my $hooks     = '';
     my $indexlist = '';
 
+    my $unique_indexes = '';
+
     INDEX:
     for my $index ( @indexes ) {
         my $type = lc $index->type || 'normal';
 
         next INDEX if $type eq 'primary';
+
+        if ( $type eq 'unique' ) {
+            $unique_indexes .= sprintf q~__PACKAGE__->add_unique_constraint(
+    %s => [qw/%s/],
+);~, $index->name, ( join ' ', @{ $index->columns } );
+            next INDEX;
+        }
 
         $type = 'normal' if $type eq 'index';
 
@@ -497,9 +512,12 @@ sub _indexes_template {
         $indexlist.= sprintf "=item * %s\n\n", $index->name;
     }
 
-    return '' if !$hooks;
+    my $sub_string = '';
+    $sub_string .= $unique_indexes if $unique_indexes;
 
-    my $sub_string = qq~
+    return $sub_string if !$hooks;
+
+    $sub_string .= qq~
 =head1 DEPLOYMENT
 
 =head2 sqlt_deploy_hook
