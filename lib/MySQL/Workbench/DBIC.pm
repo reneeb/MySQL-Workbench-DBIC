@@ -349,95 +349,7 @@ sub _class_template{
         my @columns = @{ $table->columns };
 
         for my $column ( @columns ) {
-            my $default_value = $column->default_value || '';
-            $default_value =~ s/'/\\'/g;
-
-            my $size = $column->length;
-
-            if ( $column->datatype =~ /char/i && $column->length <= 0 ) {
-                $size = 255;
-            }
-
-            my @options;
-
-            my $name        = $column->name;
-            my $col_comment = $column->comment;
-
-            push @options, "data_type          => '" . $column->datatype . "',";
-            push @options, "is_auto_increment  => 1,"                            if $column->autoincrement;
-            push @options, "is_nullable        => 1,"                            if !$column->not_null;
-            push @options, "size               => " . $size . ","                if $size > 0;
-            push @options, "default_value      => '" . $default_value . "',"     if $default_value;
-
-            if ( first { $column->datatype eq $_ }qw/SMALLINT INT INTEGER BIGINT MEDIUMINT NUMERIC DECIMAL/ ) {
-                push @options, "is_numeric         => 1,";
-            }
-
-            push @options, "retrieve_on_insert => 1," if first{ $name eq $_ }@{ $table->primary_key };
-            push @options, "is_foreign_key     => 1," if $foreign_keys{$name};
-
-            my %flags = %{ $column->flags };
-            if ( %flags ) {
-                my $extras = join ', ', map { "$_ => 1" }sort keys %flags;
-                push @options, sprintf "extra => {%s},", $extras;
-            }
-
-            my $column_comment_perl_raw = '';
-
-            if ( ( $data && $data->{column_info}->{$name} ) || $col_comment ) {
-                local $Data::Dumper::Sortkeys = 1;
-                local $Data::Dumper::Indent   = 1;
-                local $Data::Dumper::Pad      = '      ';
-
-                utf8::upgrade( $col_comment );
-
-                my $comment_data;
-                eval {
-                    $comment_data = JSON->new->decode( $col_comment );
-                    1;
-                } or do {
-                    if ( $col_comment =~ /\{/ ) {
-                    print STDERR $col_comment, ": ", $@;
-                    }
-                };
-
-                if ( !$comment_data || 'HASH' ne ref $comment_data ) {
-                    $column_comment_perl_raw = $col_comment;
-                    $comment_data            = {};
-                }
-                else {
-                    $column_comment_perl_raw = delete $comment_data->{comment} // '';
-                }
-
-                my %hash = (
-                    %{ $data->{column_info}->{$name} || {} },
-                    %{ $comment_data || {} },
-                );
-
-                if ( %hash ) {
-                    my $dump = Dumper( \%hash );
-                    $dump    =~ s{\$VAR1 \s+ = \s* \{ \s*? $}{}xms;
-                    $dump    =~ s{\A\s+\n\s{8}}{}xms;
-                    $dump    =~ s{\n[ ]+\};\s*\z}{}xms;
-
-                    push @options, $dump;
-                }
-            }
-
-            my $option_string = join "\n        ", @options;
-
-            my @column_comment_lines = split /\r?\n/, $column_comment_perl_raw;
-            my $column_comment_perl  = '';
-            if ( @column_comment_lines ) {
-                my $sep = sprintf "\n%s%s%s# ", ' ' x 4, ' ' x length $name, ' ' x 6;
-                $column_comment_perl = ' # ' . join ( $sep, @column_comment_lines );
-            }
-
-            $column_string .= <<"            COLUMN";
-    $name => {$column_comment_perl
-        $option_string
-    },
-            COLUMN
+            $column_string .= $self->_column_details( $table, $column, \%foreign_keys, $data );
         }
     }
 
@@ -480,6 +392,102 @@ $custom_code
 1;~;
 
     return $package, $template;
+}
+
+sub _column_details {
+    my ($self, $table, $column, $foreign_keys, $data) = @_;
+
+    my $default_value = $column->default_value || '';
+    $default_value =~ s/'/\\'/g;
+
+    my $size = $column->length;
+
+    if ( $column->datatype =~ /char/i && $column->length <= 0 ) {
+        $size = 255;
+    }
+
+    my @options;
+
+    my $name        = $column->name;
+    my $col_comment = $column->comment;
+
+    push @options, "data_type          => '" . $column->datatype . "',";
+    push @options, "is_auto_increment  => 1,"                            if $column->autoincrement;
+    push @options, "is_nullable        => 1,"                            if !$column->not_null;
+    push @options, "size               => " . $size . ","                if $size > 0;
+    push @options, "default_value      => '" . $default_value . "',"     if $default_value;
+
+    if ( first { $column->datatype eq $_ }qw/SMALLINT INT INTEGER BIGINT MEDIUMINT NUMERIC DECIMAL/ ) {
+        push @options, "is_numeric         => 1,";
+    }
+
+    push @options, "retrieve_on_insert => 1," if first{ $name eq $_ }@{ $table->primary_key };
+    push @options, "is_foreign_key     => 1," if $foreign_keys->{$name};
+
+    my %flags = %{ $column->flags };
+    if ( %flags ) {
+        my $extras = join ', ', map { "$_ => 1" }sort keys %flags;
+        push @options, sprintf "extra => {%s},", $extras;
+    }
+
+    my $column_comment_perl_raw = '';
+
+    if ( ( $data && $data->{column_info}->{$name} ) || $col_comment ) {
+        local $Data::Dumper::Sortkeys = 1;
+        local $Data::Dumper::Indent   = 1;
+        local $Data::Dumper::Pad      = '      ';
+
+        utf8::upgrade( $col_comment );
+
+        my $comment_data;
+        eval {
+            $comment_data = JSON->new->decode( $col_comment );
+            1;
+        } or do {
+            if ( $col_comment =~ /\{/ ) {
+            print STDERR $col_comment, ": ", $@;
+            }
+        };
+
+        if ( !$comment_data || 'HASH' ne ref $comment_data ) {
+            $column_comment_perl_raw = $col_comment;
+            $comment_data            = {};
+        }
+        else {
+            $column_comment_perl_raw = delete $comment_data->{comment} // '';
+        }
+
+        my %hash = (
+            %{ $data->{column_info}->{$name} || {} },
+            %{ $comment_data || {} },
+        );
+
+        if ( %hash ) {
+            my $dump = Dumper( \%hash );
+            $dump    =~ s{\$VAR1 \s+ = \s* \{ \s*? $}{}xms;
+            $dump    =~ s{\A\s+\n\s{8}}{}xms;
+            $dump    =~ s{\n[ ]+\};\s*\z}{}xms;
+
+            push @options, $dump;
+        }
+    }
+
+    my $option_string = join "\n        ", @options;
+
+    my @column_comment_lines = split /\r?\n/, $column_comment_perl_raw;
+    my $column_comment_perl  = '';
+
+    if ( @column_comment_lines ) {
+        my $sep = sprintf "\n%s%s%s# ", ' ' x 4, ' ' x length $name, ' ' x 6;
+        $column_comment_perl = ' # ' . join ( $sep, @column_comment_lines );
+    }
+
+    my $details = sprintf "    %s => {%s\n        %s\n    },\n",
+        $name,
+        $column_comment_perl,
+        $option_string;
+
+    return $details;
 }
 
 sub _indexes_template {
