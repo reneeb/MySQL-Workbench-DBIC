@@ -5,6 +5,7 @@ use strict;
 
 use Carp;
 use Data::Dumper;
+use File::Path qw(make_path);
 use File::Spec;
 use JSON;
 use List::Util qw(first);
@@ -24,7 +25,7 @@ has result_namespace         => ( is => 'ro', isa => \&_check_namespace, require
 has resultset_namespace      => ( is => 'ro', isa => \&_check_namespace, required => 1, default => sub { '' } );
 has load_result_namespace    => ( is => 'ro', isa => \&_check_namespace_array, default => sub { '' } );
 has load_resultset_namespace => ( is => 'ro', isa => \&_check_namespace_array, default => sub { '' } );
-has schema_name              => ( is => 'rwp', isa => sub { $_[0] =~ m{ \A [A-Za-z0-9_]+ \z }xms } );
+has schema_name              => ( is => 'rwp', isa => sub { defined $_[0] && $_[0] =~ m{ \A [A-Za-z0-9_]+ \z }xms } );
 has parser                   => ( is => 'rwp' );
 has version_add              => ( is => 'ro', required => 1, default => sub { 0.01 } );
 has column_details           => ( is => 'ro', required => 1, default => sub { 0 } );
@@ -167,8 +168,8 @@ sub _write_files{
         my $file = pop @path;
         my $dir  = File::Spec->catdir( @path );
 
-        unless( -e $dir ){
-            $self->_mkpath( $dir );
+        if( !-e $dir ){
+            make_path( $dir ) or croak "Cannot create directory $dir";
         }
 
         if( open my $fh, '>', $dir . '/' . $file . '.pm' ){
@@ -181,19 +182,6 @@ sub _write_files{
         }
         else{
             croak "Couldn't create $file.pm: $!";
-        }
-    }
-}
-
-sub _mkpath{
-    my ($self, $path) = @_;
-
-    my @parts = split /[\\\/]/, $path;
-
-    for my $i ( 0..$#parts ){
-        my $dir = File::Spec->catdir( @parts[ 0..$i ] );
-        unless ( -e $dir ) {
-            mkdir $dir or die "$dir: $!";
         }
     }
 }
@@ -397,7 +385,7 @@ $custom_code
 sub _column_details {
     my ($self, $table, $column, $foreign_keys, $data) = @_;
 
-    my $default_value = $column->default_value || '';
+    my $default_value = $column->default_value // '';
     $default_value =~ s/'/\\'/g;
 
     my $size = $column->length;
@@ -415,7 +403,7 @@ sub _column_details {
     push @options, "is_auto_increment  => 1,"                            if $column->autoincrement;
     push @options, "is_nullable        => 1,"                            if !$column->not_null;
     push @options, "size               => " . $size . ","                if $size > 0;
-    push @options, "default_value      => '" . $default_value . "',"     if $default_value;
+    push @options, "default_value      => '" . $default_value . "',"     if length $default_value;
 
     if ( first { $column->datatype eq $_ }qw/SMALLINT INT INTEGER BIGINT MEDIUMINT NUMERIC DECIMAL/ ) {
         push @options, "is_numeric         => 1,";
@@ -459,7 +447,7 @@ sub _column_details {
 
         my %hash = (
             %{ $data->{column_info}->{$name} || {} },
-            %{ $comment_data || {} },
+            %{ $comment_data },
         );
 
         if ( %hash ) {
@@ -503,7 +491,9 @@ sub _indexes_template {
 
     INDEX:
     for my $index ( @indexes ) {
-        my $type = lc $index->type || 'normal';
+        my $type = $index->type;
+        $type    = 'normal' if !$type;
+        $type    = lc $type;
 
         next INDEX if $type eq 'primary';
 
@@ -561,16 +551,17 @@ $hooks
 sub _main_template{
     my ($self) = @_;
 
-    my @class_names  = @{ $self->classes };
-    my $classes      = join "\n", map{ "    " . $_ }@class_names;
+    my @class_names = @{ $self->classes };
+    my $classes     = join "\n", map{ "    " . $_ }@class_names;
 
-    my $schema_name  = $self->schema_name;
+    my $schema_name = $self->schema_name;
+    $schema_name    = '' if !defined $schema_name;
 
-    unless ($schema_name) {
+    if (!$schema_name) {
         my @schema_names = qw(DBIC_Schema Database DBIC MySchema MyDatabase DBIxClass_Schema);
 
         for my $schema ( @schema_names ){
-            unless( grep{ $_ eq $schema }@class_names ){
+            if( !grep{ $_ eq $schema }@class_names ){
                 $schema_name = $schema;
                 last;
             }
@@ -586,15 +577,14 @@ sub _main_template{
        $namespace  =~ s/^:://;
 
     my $version;
-    eval {
+    do {
         my $lib_path = $self->output_path;
         my @paths    = @INC;
         unshift @INC, $lib_path;
 
         eval "require $namespace";
         $version = $namespace->VERSION();
-        1;
-    } or warn $@;
+    };
 
     my $custom_code;
     if ( $version ) {
@@ -631,13 +621,13 @@ sub _main_template{
     }
 
     my $version_add = $self->version_add;
-    $version_add  ||= 0.01;
+    $version_add    = 0.01 if !$version_add;
 
     if ( $version ) {
         $version += $version_add;
     }
 
-    $version ||= $version_add;
+    $version = $version_add if !$version;
 
     $self->_set_version( $version );
 
