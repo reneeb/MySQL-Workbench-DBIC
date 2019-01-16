@@ -20,7 +20,9 @@ package
 use strict;
 use warnings;
 
-sub DBIx::Class::Schema::load_namespaces {}
+no warnings 'redefine';
+
+*DBIx::Class::Schema::load_namespaces = sub {};
 
 =head2 DBIx::Class::Schema
 
@@ -34,12 +36,12 @@ package
 use strict;
 use warnings;
 
-sub DBIx::Class::load_components {}
-sub DBIx::Class::table {}
-sub DBIx::Class::add_columns {}
-sub DBIx::Class::set_primary_key {}
-sub DBIx::Class::belongs_to {}
-sub DBIx::Class::has_many {}
+*DBIx::Class::load_components = sub{};
+*DBIx::Class::table = sub {};
+*DBIx::Class::add_columns = sub{};
+*DBIx::Class::set_primary_key = sub{};
+*DBIx::Class::belongs_to = sub{};
+*DBIx::Class::has_many = sub{};
 
 =head2 DBIx::Class
 
