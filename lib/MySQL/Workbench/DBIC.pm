@@ -19,7 +19,7 @@ has output_path              => ( is => 'ro', required => 1, default => sub { '.
 has file                     => ( is => 'ro', required => 1 );
 has uppercase                => ( is => 'ro' );
 has inherit_from_core        => ( is => 'ro' );
-has namespace                => ( is => 'ro', isa => \&_check_namespace, required => 1, default => sub { '' } );
+has namespace                => ( is => 'ro', isa => sub{ _check_namespace( @_, 1) }, required => 1, default => sub { '' } );
 has result_namespace         => ( is => 'ro', isa => \&_check_namespace, required => 1, default => sub { '' } );
 has resultset_namespace      => ( is => 'ro', isa => \&_check_namespace, required => 1, default => sub { '' } );
 has load_result_namespace    => ( is => 'ro', isa => \&_check_namespace_array, default => sub { '' } );
@@ -40,7 +40,12 @@ has version => ( is => 'rwp' );
 has classes => ( is => 'rwp', isa => sub { ref $_[0] && ref $_[0] eq 'ARRAY' }, default => sub { [] } );
 
 sub _check_namespace {
-    my ($namespace) = @_;
+    my ($namespace, $allow_empty_string) = @_;
+
+    return if !defined $namespace;
+    return if ref $namespace;
+
+    return 1 if $namespace eq '' && $allow_empty_string;
 
     return $namespace =~ m{ \A [A-Z]\w*(::\w+)* \z }xms;
 }
@@ -52,7 +57,9 @@ sub _check_namespace_array {
         return _check_namespace( $namespaces );
     }
 
-    for my $namespace ( @{ $namespaces || [] } ) {
+    return if 'ARRAY' ne ref $namespaces;
+
+    for my $namespace ( @{ $namespaces } ) {
         return if !_check_namespace( $namespace );
     }
 
@@ -615,11 +622,14 @@ sub _main_template{
         unshift @{ $all_namespaces_to_load{result_namespace} }, $namespace if !$found;
     }
 
+    my $version_add = $self->version_add;
+    $version_add  ||= 0.01;
+
     if ( $version ) {
-        $version += $self->version_add || 0.01;
+        $version += $version_add;
     }
 
-    $version ||= ($self->version_add || 0.01);
+    $version ||= $version_add;
 
     $self->_set_version( $version );
 
