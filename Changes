@@ -1,6 +1,11 @@
 Change history for MySQL::Workbench::DBIC
 =========================================
 
+1.17 2019-03-17 09:53:00
+
+  * fix tests
+  * fix list of prereqs
+
 1.16 2019-01-16 09:35:00
 
   * handle flags and unique constraints correctly

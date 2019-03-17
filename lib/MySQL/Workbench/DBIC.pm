@@ -14,7 +14,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '1.16';
+our $VERSION = '1.17';
 
 has output_path              => ( is => 'ro', required => 1, default => sub { '.' } );
 has file                     => ( is => 'ro', required => 1 );
