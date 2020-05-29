@@ -210,6 +210,8 @@ Then every generated class has a `use utf8;` in it.
 
 ## file
 
+## schema\_base\_class
+
 ## inherit\_from\_core
 
 By default, the classes inherit from `DBIx::Class` and they load the components
