@@ -14,7 +14,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '1.17';
+our $VERSION = '1.18';
 
 has output_path              => ( is => 'ro', required => 1, default => sub { '.' } );
 has file                     => ( is => 'ro', required => 1 );
@@ -37,6 +37,7 @@ has has_one_prefix           => ( is => 'ro', required => 1, default => sub { ''
 has many_to_many_prefix      => ( is => 'ro', required => 1, default => sub { '' } );
 has utf8                     => ( is => 'ro', required => 1, default => sub { 0 } );
 has schema_base_class        => ( is => 'ro', required => 1, default => sub { 'DBIx::Class::Schema' } );
+has remove_table_prefix      => ( is => 'ro' );
 
 has version => ( is => 'rwp' );
 has classes => ( is => 'rwp', isa => sub { ref $_[0] && ref $_[0] eq 'ARRAY' }, default => sub { [] } );
@@ -276,6 +277,12 @@ sub _class_template{
 
     my $name    = $table->name;
     my $class   = $name;
+
+    if ( defined $self->remove_table_prefix ) {
+        my $prefix = $self->remove_table_prefix;
+        $class =~ s{\A\Q$prefix\E}{};
+    }
+
     if ( $self->uppercase ) {
         $class = join '', map{ ucfirst $_ }split /[_-]/, $name;
     }
@@ -877,6 +884,20 @@ Then every generated class has a C<use utf8;> in it.
 =head2 file
 
 =head2 schema_base_class
+
+=head2 remove_table_prefix
+
+If your tables have a common prefix and you do not want to have that prefix
+in the class names, you can use C<remove_table_prefix>:
+
+  my $foo = MySQL::Workbench::DBIC->new(
+    file                => $file,
+    schema_name         => 'Schema',
+    version             => '0.01',
+    remove_table_prefix => 'ot_',
+  );
+
+This removes any I<ot_> from the start at the class name.
 
 =head2 inherit_from_core
 
