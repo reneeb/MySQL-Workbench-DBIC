@@ -14,7 +14,7 @@ use MySQL::Workbench::Parser;
 
 # ABSTRACT: create DBIC scheme for MySQL workbench .mwb files
 
-our $VERSION = '1.18';
+our $VERSION = '1.19';
 
 has output_path              => ( is => 'ro', required => 1, default => sub { '.' } );
 has file                     => ( is => 'ro', required => 1 );
@@ -192,6 +192,14 @@ sub _has_many_template{
     my ($self, $to, $rels) = @_;
 
     my $to_class = $to;
+    my $name     = $to;
+
+    if ( defined $self->remove_table_prefix ) {
+        my $prefix = $self->remove_table_prefix;
+        $to_class  =~ s{\A\Q$prefix\E}{};
+        $name      =~ s{\A\Q$prefix\E}{};
+    }
+
     if ( $self->uppercase ) {
         $to_class = join '', map{ ucfirst $_ }split /[_-]/, $to;
     }
@@ -203,8 +211,6 @@ sub _has_many_template{
        'Result',
        $to_class,
     );
-
-    my $name = $to;
 
     my %has_many_rels;
     my $counter = 1;
@@ -234,6 +240,14 @@ sub _belongs_to_template{
     my ($self, $from, $rels) = @_;
 
     my $from_class = $from;
+    my $name = $from;
+
+    if ( defined $self->remove_table_prefix ) {
+        my $prefix  = $self->remove_table_prefix;
+        $from_class =~ s{\A\Q$prefix\E}{};
+        $name       =~ s{\A\Q$prefix\E}{};
+    }
+
     if ( $self->uppercase ) {
         $from_class = join '', map{ ucfirst $_ }split /[_-]/, $from;
     }
@@ -245,8 +259,6 @@ sub _belongs_to_template{
        'Result',
        $from_class,
     );
-
-    my $name = $from;
 
     my %belongs_to_rels;
     my $counter = 1;
