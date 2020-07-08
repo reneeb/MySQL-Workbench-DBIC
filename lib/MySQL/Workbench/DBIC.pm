@@ -461,10 +461,6 @@ __PACKAGE__->result_source_instance->view_definition(
     "$definition"
 );
 
-__PACKAGE__->result_source_instance->deploy_depends_on(
-    [$classes]
-);
-
 __PACKAGE__->add_columns(
 $column_string
 );
