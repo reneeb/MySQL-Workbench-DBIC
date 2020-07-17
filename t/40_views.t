@@ -44,8 +44,6 @@ my $content = do { local ( @ARGV, $/ ) = $module; <> };
 
 like $content, qr{__PACKAGE__->table_class\('DBIx::Class::ResultSource::View'\);}, 'view result source';
 like $content, qr{__PACKAGE__->result_source_instance->view_definition\(}, 'definition';
-like $content, qr{DBIC_Schema::Result::table1"}, 'depends on table1';
-like $content, qr{DBIC_Schema::Result::table2"}, 'depends on table2';
 like $content, qr{
  CREATE \s+ VIEW \s+ `view2` \s+ AS \s+
     SELECT \s+ table1.cidr, \s+ col2, \s+ col3 \s+
