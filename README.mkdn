@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/reneeb/MySQL-Workbench-DBIC.svg?branch=master)](https://travis-ci.org/reneeb/MySQL-Workbench-DBIC)
-[![Kwalitee status](http://cpants.cpanauthors.org/dist/MySQL-Workbench-DBIC.png)](http://cpants.charsbar.org/dist/overview/MySQL-Workbench-DBIC)
+[![Kwalitee status](http://cpants.cpanauthors.org/dist/MySQL-Workbench-DBIC.png)](https://cpants.cpanauthors.org/dist/MySQL-Workbench-DBIC)
 [![GitHub issues](https://img.shields.io/github/issues/reneeb/MySQL-Workbench-DBIC.svg)](https://github.com/reneeb/MySQL-Workbench-DBIC/issues)
 
 # NAME
@@ -8,7 +8,7 @@ MySQL::Workbench::DBIC - create DBIC scheme for MySQL workbench .mwb files
 
 # VERSION
 
-version 1.20
+version 1.21
 
 # SYNOPSIS
 
@@ -102,7 +102,7 @@ With enabled column details:
       },
     );
 
-This is useful when you use [DBIx::Class::DeploymentHandler](https://metacpan.org/pod/DBIx::Class::DeploymentHandler) to deploy the columns
+This is useful when you use [DBIx::Class::DeploymentHandler](https://metacpan.org/pod/DBIx%3A%3AClass%3A%3ADeploymentHandler) to deploy the columns
 correctly.
 
 ## version\_add
