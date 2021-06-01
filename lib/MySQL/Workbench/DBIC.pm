@@ -874,7 +874,7 @@ of C<version_add> (default: 0.01)
 
 =head2 schema_name
 
-sets a new name for the schema. By default on of these names is used:
+sets a new name for the schema. By default one of these names is used:
 
   DBIC_Scheme Database DBIC MyScheme MyDatabase DBIxClass_Scheme
 
